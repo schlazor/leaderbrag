@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
 
   spec.summary       = 'Find out if your baseball team is best baseball team.'
   spec.description   = 'Tools to determine whether a baseball team is leading'\
-   'its division/league/all of baseball.'
+   ' its division/league/all of baseball.'
   spec.homepage      = 'https://github.com/schlazor/leaderbrag'
 
   if spec.respond_to?(:metadata)
