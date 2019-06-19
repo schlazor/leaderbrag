@@ -1,4 +1,4 @@
-# Leaderbrag
+# Leaderbrag [![Build Status](https://travis-ci.org/schlazor/leaderbrag.svg?branch=master)](https://travis-ci.org/schlazor/leaderbrag)
 
 Leaderbrag is a small gem that uses [xmlstats](https://erikberg.com/api) to find the leading team in baseball or determine if a given team is the best in baseball. 
 
