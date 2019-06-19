@@ -22,7 +22,11 @@ Or install it yourself as:
 
 ## Usage
 
-Using the CLI is pretty straightforward. Use the `find` task to find the best team in baseball:
+First, ensure you have $GEM_HOME/bin in your path.
+
+Using the CLI is pretty straightforward.
+
+Use the `find` task to find the best team in baseball:
 
 ```
 $ leader find
