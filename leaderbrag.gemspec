@@ -33,7 +33,9 @@ Gem::Specification.new do |spec|
   spec.bindir        = 'exe'
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
+  spec.add_dependency 'redis', '~> 4.1'
   spec.add_dependency 'thor', '~> 0.20'
+  spec.add_dependency 'xmlstats', '~> 1.7'
   spec.add_development_dependency 'aruba', '~> 0.14'
   spec.add_development_dependency 'bundler', '~> 2.0'
   spec.add_development_dependency 'cucumber', '~> 3.1'
