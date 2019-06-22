@@ -8,7 +8,7 @@ Feature: Leader
     Then the output should match /The Minnesota Twins are (not )?the best team in baseball./
 
   Scenario: I need a list of team IDs.
-    When I run `leader list`
+    When I run `leader board`
     Then the output should contain "kansas-city-royals"
   
   Scenario: I want to know who the best team in baseball is.
