@@ -66,5 +66,30 @@ module Leaderbrag
     def overall_rank(team)
       @standings.find_index(team) + 1
     end
+
+    def filter(sb_league = false, sb_division = false,
+               s_conference = nil, s_division = nil)
+      view = standings.sort_by do |team|
+        sort_items = []
+        sort_items << team.conference if sb_league
+        sort_items << team.conference if sb_division
+        sort_items << team.division if sb_division
+        sort_items << league_rank(team) if sb_league
+        sort_items << team.rank if sb_division
+        sort_items << overall_rank(team) if !sb_league && !sb_division
+        sort_items
+      end
+      unless s_conference.nil?
+        view.select! do |team|
+          team.conference == s_conference
+        end
+      end
+      unless s_division.nil?
+        view.select! do |team|
+          team.division == s_division
+        end
+      end
+      view
+    end
   end
 end
