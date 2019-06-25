@@ -1,11 +1,12 @@
 # frozen_string_literal: true
 
 require 'xmlstats'
+require 'date'
 module Leaderbrag
   # Mostly wraps MLB standings adding some additional leadership checks
   class Leader
     attr_reader :standings
-    def initialize
+    def initialize(date = Date.today)
       Xmlstats.cacher = if ENV['XMLSTATS_CACHER'] == 'redis'
                           host = '127.0.0.1'
                           if ENV.key? 'XMLSTATS_REDIS_HOST'
@@ -16,12 +17,12 @@ module Leaderbrag
                           Xmlstats::Cachers::Memory.new
                         end
       begin
-        @standings = Xmlstats.mlb_standing
+        @standings = Xmlstats.mlb_standing(date)
       rescue Redis::CannotConnectError
         warn "WARN: Redis host #{ENV['XMLSTATS_REDIS_HOST']} "\
         'not available. Falling back to memory cacher.'
         Xmlstats.cacher = Xmlstats::Cachers::Memory.new
-        @standings = Xmlstats.mlb_standing
+        @standings = Xmlstats.mlb_standing(date)
       end
       @standings.sort_by! do |team|
         team.win_percentage.to_f

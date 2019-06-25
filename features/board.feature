@@ -13,6 +13,5 @@ Feature: leader board
 
   Scenario: I need a list of all the baseball teams in the AL E ordered by win percentage.
     When I run `leader board -L AL -D E`
-    Then the output should not contain "AL    \d{1,2}?     W   1"
-  
+    Then the output should not contain "AL    \d{1,2}?    W    1"
  

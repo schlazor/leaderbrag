@@ -6,7 +6,11 @@ require 'redis'
 module Leaderbrag
   # A CLI for Leaderbrag
   class CLI < Thor
-    def self.exit_on_failure?
+    class_option :date, type: :string, desc: 'The date for which to retrieve '\
+                        'statistics. \'yyyyMMdd\' format; default is current '\
+                        'date. Statistics exist starting with the 2008 season.'
+
+    def self.exit_on_failure
       true
     end
 
@@ -20,10 +24,9 @@ module Leaderbrag
         warn 'Please set XMLSTATS_API_KEY environment variable'
         exit 70
       end
-      @leader = Leaderbrag::Leader.new
     end
 
-    desc 'board', 'Lists all baseball teams with their standings'
+    desc 'board', 'Lists baseball teams with their standings.'
     method_option(:sort_by_league, aliases: '-l',
                                    desc: 'Sort by league.', default: false,
                                    type: :boolean)
@@ -40,26 +43,29 @@ module Leaderbrag
                           'Only show results for this division.',
                                   enum: %w[E C W])
     def board
-      puts 'Team Name'.ljust(23) +
-           'Team ID               Win%  Rank  League Rank  Div Rank'
-      puts '-'.ljust(78, '-')
+      populate
+      puts 'Team ID               Win%   W   L  Rank  League Rank  Div Rank   GB   Streak'
+      puts '-'.ljust(77, '-')
       teams = @leader.filter(options[:sort_by_league],
                              options[:sort_by_division],
                              options[:only_league],
                              options[:only_division])
       teams.each do |team|
-        puts "#{team.first_name} #{team.last_name}:".ljust(23) +
-             team.team_id.ljust(22) + team.win_percentage.ljust(7) +
-             @leader.overall_rank(team).to_s.ljust(7) +
-             team.conference.ljust(6) +
-             @leader.league_rank(team).to_s.ljust(6) +
-             team.division.ljust(4) + team.rank.to_s
+        puts team.team_id.ljust(22) + team.win_percentage.ljust(6) +
+             team.won.to_s.ljust(4) +
+             team.lost.to_s.ljust(@leader.overall_rank(team) < 10 ? 5 : 4) +
+             @leader.overall_rank(team).to_s.ljust(@leader.overall_rank(team) < 10 ? 7 : 8) +
+             team.conference.ljust(@leader.league_rank(team) < 10 ? 7 : 6) +
+             @leader.league_rank(team).to_s.ljust(@leader.league_rank(team) < 10 ? 5 : 6) +
+             team.division.ljust(5) +
+             team.rank.to_s.ljust(team.games_back < 10 ? 5 : 4) +
+             team.games_back.to_s.ljust(team.games_back < 10 ? 7 : 8) +
+             team.streak.to_s
       end
     end
 
-    desc 'find', 'Finds the best team in baseball'
-    method_option(:quiet, aliases: '-q',
-                          desc: 'Do not print results.', default: false)
+    desc 'find', 'Finds the best team in all of baseball, a league or a '\
+                 'division.'
     method_option(:stats, aliases: '-s',
                           desc: 'Include team stats in output.',
                           default: false)
@@ -76,15 +82,16 @@ module Leaderbrag
         warn 'League must be specified.'
         exit 80
       end
+      populate
       s_league = (options[:league].nil? ? nil : options[:league])
       s_division = (options[:division].nil? ? nil : options[:division])
       teams = @leader.filter(!options[:league].nil?, !options[:division].nil?,
                              s_league, s_division)
       myteam = teams[0]
-      brag(myteam, options[:quiet], options[:stats])
+      brag(myteam, false, options[:stats])
     end
 
-    desc 'is TEAM', 'asserts that TEAM is the best team in baseball'
+    desc 'is TEAM', 'Asserts that TEAM is the best team in baseball.'
     method_option(:quiet, aliases: '-q', type: :boolean,
                           desc: 'Do not print results', default: false)
     method_option(:stats, aliases: '-s', type: :boolean,
@@ -99,9 +106,10 @@ module Leaderbrag
                              'Only affects the exit code.',
                              default: false)
     def is?(team_id)
+      populate
       myteam = @leader.team(team_id)
       if myteam.nil?
-        warn "No such team with ID #{options['team']}"
+        warn "No such team with ID '#{team_id}'"
         exit 50
       end
       brag(myteam, options[:quiet], options[:stats])
@@ -116,12 +124,39 @@ module Leaderbrag
 
     private
 
+    def populate
+      @leader = if options[:date].nil?
+                  Leaderbrag::Leader.new
+                else
+                  Leaderbrag::Leader.new(Date.parse(options[:date]))
+                end
+    end
+
+    def ordinal(n)
+      case n % 100
+      when 11, 12, 13 then 'th'
+      else
+        case n % 10
+        when 1 then 'st'
+        when 2 then 'nd'
+        when 3 then 'rd'
+        else 'th'
+        end
+      end
+    end
+
     def brag(myteam, quiet, stats)
       name = "#{myteam.first_name}"\
              " #{myteam.last_name}"
       league = myteam.conference
       division = myteam.division
       unless quiet
+        d = Date.today
+        d = Date.parse(options[:date]) unless options[:date].nil?
+        start = 'Today,'
+        start = 'On' if d != Date.today
+
+        puts "#{start} the #{d.strftime("%-d#{ordinal(d.day)} day of %B, %Y")}:"
         print "The #{name} are "
         print 'not ' unless @leader.division_leader?(myteam)
         print "the leaders of the #{league} #{division} division."
