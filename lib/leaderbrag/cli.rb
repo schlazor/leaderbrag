@@ -160,9 +160,7 @@ module Leaderbrag
         print "The #{name} are "
         print 'not ' unless @leader.division_leader?(myteam)
         print "the leaders of the #{league} #{division} division."
-        unless @leader.division_leader?(myteam)
-          print " They are #{myteam.ordinal_rank}."
-        end
+        print " They are #{myteam.ordinal_rank}." unless @leader.division_leader?(myteam)
         print "\nThe #{name} are "
         print 'not ' unless @leader.league_leader?(myteam)
         print "the leaders of the #{league}."
